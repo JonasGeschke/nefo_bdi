@@ -47,30 +47,13 @@ if("xlsx" %in% rownames(installed.packages())   == FALSE){
 
 ```{r Laden der Rohdaten und Vorbereitung der Daten, eval=FALSE}
 ## Load raw data
-Raw_deutsch <- xlsx::read.xlsx(file = "Daten/umfrage_zur_biodiversitatsdatenintegration_in_deutschland.xlsx", sheetIndex = 1, encoding="UTF-8", rowIndex = NULL, startRow = 3, colIndex = c(10:150))
+Raw_deutsch <- read.csv2(file = "Daten/umfrage_zur_biodiversitatsdatenintegration_in_deutschland.csv", header = F, sep = ";")
+Raw_englisch <- read.csv2(file = "Daten/questionnaire_on_integration_of_biodiversity_data_in_germany.csv", header = F, sep = ";")
 
-Raw_englisch <- xlsx::read.xlsx(file = "Daten/questionnaire_on_integration_of_biodiversity_data_in_germany.xlsx", sheetIndex = 1, encoding="UTF-8")
+gesamt <- rbind(Raw_deutsch[-which(Raw_deutsch$V9 == "nefo"),], Raw_englisch[-c(1:3, which(Raw_englisch$V9 == "nefo")),])
+gesamt <- gesamt[-c(1:3),-c(1:9)]
 
 
-## Combine dataset
-Gdata_FN <- Raw_forschungsnetzwerk
-names(Gdata_FN) <- c("inst", "abbr", "BeGenDiv", "BBIB", "BioFrankfurt", "BION", "iDiv", "Ecornet", "FVB", "GBIF-D", "GFBIO", "HIFMB", "KDM", "LVB")
-Gdata_FN <- Gdata_FN[,-9] #Delete FVB
-rownames(Gdata_FN) <- Gdata_FN[,2] #Inst oder abbr as rownames
-Gdata_FN <- Gdata_FN[,-c(1,2)] #Delete inst and abbr
-Gdata_FN <- Gdata_FN[,c(11,8,4,5,2,10,3,6,7,1,9)] #Order by number of members
-
-Gdata_FN$BeGenDiv <- as.numeric(Gdata_FN$BeGenDiv)
-Gdata_FN$BBIB <- as.numeric(Gdata_FN$BBIB)
-Gdata_FN$BioFrankfurt <- as.numeric(Gdata_FN$BioFrankfurt)
-Gdata_FN$BION <- as.numeric(Gdata_FN$BION)
-Gdata_FN$iDiv <- as.numeric(Gdata_FN$iDiv)
-Gdata_FN$Ecornet <- as.numeric(Gdata_FN$Ecornet)
-Gdata_FN$GFBIO <- as.numeric(Gdata_FN$GFBIO)
-Gdata_FN$HIFMB <- as.numeric(Gdata_FN$HIFMB)
-Gdata_FN$KDM <- as.numeric(Gdata_FN$KDM)
-Gdata_FN$LVB <- as.numeric(Gdata_FN$LVB)
-Gdata_FN$`GBIF-D` <- as.numeric(Gdata_FN$`GBIF-D`)
 ```
 
 
