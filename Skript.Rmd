@@ -47,12 +47,40 @@ if("xlsx" %in% rownames(installed.packages())   == FALSE){
 
 ```{r Laden der Rohdaten und Vorbereitung der Daten, eval=FALSE}
 ## Load raw data
-Raw_deutsch <- read.csv2(file = "Daten/umfrage_zur_biodiversitatsdatenintegration_in_deutschland.csv", header = F, sep = ";")
-Raw_englisch <- read.csv2(file = "Daten/questionnaire_on_integration_of_biodiversity_data_in_germany.csv", header = F, sep = ";")
+Raw_deutsch <- read.csv2(file = "Daten/umfrage_zur_biodiversitatsdatenintegration_in_deutschland.csv", 
+                         header = F, sep = ";", fileEncoding = "UTF8", )
+Raw_englisch <- read.csv2(file = "Daten/questionnaire_on_integration_of_biodiversity_data_in_germany.csv", 
+                          header = F, sep = ";", fileEncoding = "UTF8")
 
 gesamt <- rbind(Raw_deutsch[-which(Raw_deutsch$V9 == "nefo"),], Raw_englisch[-c(1:3, which(Raw_englisch$V9 == "nefo")),])
 gesamt <- gesamt[-c(1:3),-c(1:9)]
 
+Q1_1 <- gesamt[,c(1:5)]
+names(Q1_1) <- c("Datenbereitstellung", "Datenaufbereitung", "Datenverschmelzung", "anderes", "Info")
+xlsx::write.xlsx(Q1_1, file = "Q1_1.xls")
+
+Q1_2 <- gesamt[,6]
+xlsx::write.xlsx(Q1_2, file = "Q1_2.xls")
+
+Q1_3 <- gesamt[,7]
+xlsx::write.xlsx(Q1_3, file = "Q1_3.xls")
+
+Q1_4 <- gesamt[,c(8:10)]
+names(Q1_4) <- c("a", "b", "c")
+xlsx::write.xlsx(Q1_4, file = "Q1_4.xls")
+
+Q1_5 <- gesamt[,c(11:13)]
+names(Q1_5) <- c("a", "b", "c")
+xlsx::write.xlsx(Q1_5, file = "Q1_5.xls")
+
+Q1_6 <- gesamt[,c(14:16)]
+names(Q1_6) <- c("a", "b", "c")
+xlsx::write.xlsx(Q1_6, file = "Q1_6.xls")
+
+Q2_1 <- gesamt[,17]
+Q2_1[which(Q2_1 == "Yes")] <- "Ja"
+Q2_1[which(Q2_1 == "No")] <- "Nein"
+xlsx::write.xlsx(Q2_1, file = "Q2_1.xls")
 
 ```
 
