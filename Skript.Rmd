@@ -48,9 +48,11 @@ if("xlsx" %in% rownames(installed.packages())   == FALSE){
 ```{r Laden der Rohdaten und Vorbereitung der Daten, eval=FALSE}
 ## Load raw data
 Raw_deutsch <- read.csv2(file = "Daten/umfrage_zur_biodiversitatsdatenintegration_in_deutschland.csv", 
-                         header = F, sep = ";", fileEncoding = "UTF8", )
+                         header = F, sep = ";", fileEncoding = "UTF8", 
+                         na.strings = "", stringsAsFactors = TRUE)
 Raw_englisch <- read.csv2(file = "Daten/questionnaire_on_integration_of_biodiversity_data_in_germany.csv", 
-                          header = F, sep = ";", fileEncoding = "UTF8")
+                          header = F, sep = ";", fileEncoding = "UTF8", 
+                          na.strings = "", stringsAsFactors = TRUE)
 
 gesamt <- rbind(Raw_deutsch[-which(Raw_deutsch$V9 == "nefo"),], Raw_englisch[-c(1:3, which(Raw_englisch$V9 == "nefo")),])
 gesamt <- gesamt[-c(1:3),-c(1:9)]
@@ -58,9 +60,6 @@ gesamt <- gesamt[-c(1:3),-c(1:9)]
 Q1_1 <- gesamt[,c(1:5)]
 names(Q1_1) <- c("Datenbereitstellung", "Datenaufbereitung", "Datenverschmelzung", "anderes", "Info")
 xlsx::write.xlsx(Q1_1, file = "Q1_1.xls")
-
-Q1_2 <- gesamt[,6]
-xlsx::write.xlsx(Q1_2, file = "Q1_2.xls")
 
 Q1_3 <- gesamt[,7]
 xlsx::write.xlsx(Q1_3, file = "Q1_3.xls")
@@ -77,10 +76,25 @@ Q1_6 <- gesamt[,c(14:16)]
 names(Q1_6) <- c("a", "b", "c")
 xlsx::write.xlsx(Q1_6, file = "Q1_6.xls")
 
-Q2_1 <- gesamt[,17]
-Q2_1[which(Q2_1 == "Yes")] <- "Ja"
-Q2_1[which(Q2_1 == "No")] <- "Nein"
-xlsx::write.xlsx(Q2_1, file = "Q2_1.xls")
+Q3_2 <- gesamt[,c(29:36)]
+names(Q3_2) <- c("LIDAR", "RADAR", "Multi", "Hyper", "Wärme", "Ortho", "andere", "Info")
+xlsx::write.xlsx(Q3_2, file = "Q3_2.xls")
+
+Q3_5 <- gesamt[,c(85:98)]
+names(Q3_5) <- c("NBS", "EU-BS", "GAP", "Natura", "FFH", "CBD", "IPBES", "CITES", "CMS", "EUROBATS", "Ramsar", "GEO", "andere", "Info")
+xlsx::write.xlsx(Q3_5, file = "Q3_5.xls")
+
+Q3_6 <- gesamt[,c(99:101)]
+Q3_6[9,1] <- NA
+xlsx::write.xlsx(Q3_6, file = "Q3_6.xls")
+
+Q4_4 <- gesamt[,c(111:112)]
+names(Q4_4) <- c("Tätigkeit", "Info")
+xlsx::write.xlsx(Q4_4, file = "Q4_4.xls")
+
+Feedback <- gesamt[,118]
+Feedback[c(22,43)] <- NA
+xlsx::write.xlsx(Feedback, file = "Feedback.xls")
 
 ```
 
