@@ -49,14 +49,13 @@ if("xlsx" %in% rownames(installed.packages())   == FALSE){
 ## Load raw data
 Raw_deutsch <- read.csv2(file = "Daten/umfrage_zur_biodiversitatsdatenintegration_in_deutschland.csv", 
                          header = F, sep = ";", fileEncoding = "UTF8", 
-                         na.strings = "", stringsAsFactors = TRUE)
+                         na.strings = "", stringsAsFactors = FALSE)
 Raw_englisch <- read.csv2(file = "Daten/questionnaire_on_integration_of_biodiversity_data_in_germany.csv", 
                           header = F, sep = ";", fileEncoding = "UTF8", 
-                          na.strings = "", stringsAsFactors = TRUE)
+                          na.strings = "", stringsAsFactors = FALSE)
 
 gesamt <- rbind(Raw_deutsch[-which(Raw_deutsch$V9 == "nefo"),], Raw_englisch[-c(1:3, which(Raw_englisch$V9 == "nefo")),])
-gesamt <- gesamt[-c(1:3),-c(1:9)]
-
+gesamt <- gesamt[-c(1:3),-c(1,3:9)]
 
 # Qualitative Antworten
 Q1_1 <- gesamt[,c(1:5)]
@@ -182,30 +181,34 @@ Q2_3 <- t(Q2_3[,-1])
 Q3_4 <- xlsx::read.xlsx(file = "Daten/results.xlsx", sheetIndex = 4, encoding="UTF-8")
 row.names(Q3_4) <- Q3_4[,1]
 Q3_4 <- t(Q3_4[,-1])
+
+
+
+```
+
+```{r Ergebnisse roh, eval=FALSE}
+ergebnisse <- read.csv2(file = "Daten/ergebnisse.csv", 
+                         header = TRUE, sep = ";", fileEncoding = "UTF8", 
+                         na.strings = "", stringsAsFactors = FALSE)
+ergebnisse[ergebnisse == "X"] <- 1
+
+Q1_1 <- ergebnisse[,c(2:5)]
+Q1_1 <- transform(Q1_1, X1_1_a = as.numeric(X1_1_a), X1_1_b = as.numeric(X1_1_b), X1_1_c = as.numeric(X1_1_c), X1_1_d = as.numeric(X1_1_d))
+
 ```
 
 
 # Visualisierung
 
 ```{r Barplots, eval=FALSE}
-plot(Q1_1, main = "Mit welchem dieser Schritte der Biodiversitätsdatenintegration beschäftigen Sie sich?")
-plot(Q4_1, main = "Geschlechterverteilung")
-plot(Q4_2, main = "Altersverteilung")
-plot(Q4_3, main = "Höchste Abschlüsse")
-plot(Q4_4, main = "Aktuelle Tätigkeit")
-plot(Q4_5, main = "Kategorie des Arbeitgebers")
-plot(Q4_6, main = "Skala der Anwendung von Biodiversitätsdaten")
-
-Q1_1_rel <- prop.table(table(results$Q1_1[!is.na(results$Q1_1)]))
-barplot(Q1_1_rel*100,
+Q1_1_sum <- colSums(Q1_1, na.rm=T)
+Q1_1_rel <- 100/sum(Q1_1_sum)*Q1_1_sum
+barplot(Q1_1_rel,
         main = "Mit welchem dieser Schritte der Biodiversitätsdatenintegration beschäftigen Sie sich?", 
-        sub = paste("n", "=", length(Q1_1[!is.na(Q1_1)]), sep = " "),
-        ylab = "Prozent")
-
-Q1_2_rel <- prop.table(table(results$Q1_2[!is.na(results$Q1_2)]))
-barplot(Q1_2_rel*100,
-        main = "Wie viel Ihrer Arbeitszeit beschäftigen Sie sich mit der Biodiversitätsdatenintegration?", 
-        sub = paste("n", "=", length(Q1_2[!is.na(Q1_2)]), sep = " "),
-        ylab = "Prozent")
+        sub = paste("n", "=", length(rowSums(Q1_1, na.rm=T)!=0), sep = " "),
+        ylab = "Prozent",
+        names.arg = c("Datenbereitstellung", "Datenaufbereitung", "Datenverschmelzung", "Mit keinem 'dieser' Schritte"),
+        ylim = c(0,50))
+text(x = Q1_1_rel, label = round(Q1_1_rel, digits = 0), pos = 3, cex = 0.8, col = "black")
 ```
 
