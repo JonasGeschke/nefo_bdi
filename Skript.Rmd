@@ -193,22 +193,63 @@ ergebnisse <- read.csv2(file = "Daten/ergebnisse.csv",
 ergebnisse[ergebnisse == "X"] <- 1
 
 Q1_1 <- ergebnisse[,c(2:5)]
-Q1_1 <- transform(Q1_1, X1_1_a = as.numeric(X1_1_a), X1_1_b = as.numeric(X1_1_b), X1_1_c = as.numeric(X1_1_c), X1_1_d = as.numeric(X1_1_d))
+Q1_1 <- transform(Q1_1, X1_1_a = as.numeric(X1_1_a), 
+                        X1_1_b = as.numeric(X1_1_b), 
+                        X1_1_c = as.numeric(X1_1_c), 
+                        X1_1_d = as.numeric(X1_1_d))
 
+Q1_2 <- factor(ergebnisse$X1_2, levels = c("1_2_a", "1_2_b", "1_2_c", "1_2_d"))
+
+Q2_1 <- factor(ergebnisse$X2_1, levels = c("2_1_a", "2_1_b"))
+
+Q2_2 <- factor(ergebnisse[,c(19:22)], levels = c("2_2_a", "2_2_b", "2_2_c", "2_2_d")) ########################################
+Q2_2 <- transform(Q2_2, X2_2_a = as.numeric(X2_2_a), 
+                        X2_2_b = as.numeric(X2_2_b), 
+                        X2_2_c = as.numeric(X2_2_c), 
+                        X2_2_d = as.numeric(X2_2_d))
 ```
 
 
 # Visualisierung
 
 ```{r Barplots, eval=FALSE}
-Q1_1_sum <- colSums(Q1_1, na.rm=T)
+Q1_1_sum <- colSums(Q1_1, na.rm = TRUE)
 Q1_1_rel <- 100/sum(Q1_1_sum)*Q1_1_sum
-barplot(Q1_1_rel,
+q1_1 <- barplot(Q1_1_rel,
         main = "Mit welchem dieser Schritte der Biodiversitätsdatenintegration beschäftigen Sie sich?", 
-        sub = paste("n", "=", length(rowSums(Q1_1, na.rm=T)!=0), sep = " "),
-        ylab = "Prozent",
+        sub = paste("total n", "=", length(rowSums(Q1_1, na.rm=T)!=0), sep = " "),
         names.arg = c("Datenbereitstellung", "Datenaufbereitung", "Datenverschmelzung", "Mit keinem 'dieser' Schritte"),
-        ylim = c(0,50))
-text(x = Q1_1_rel, label = round(Q1_1_rel, digits = 0), pos = 3, cex = 0.8, col = "black")
+        ylim = c(0,max(Q1_1_rel)+5), yaxt='n')
+text(x = q1_1, y = Q1_1_rel, label = paste("n = ", Q1_1_sum, " / ", round(Q1_1_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+
+Q1_2_sum <- as.numeric(table(Q1_2))
+names(Q1_2_sum) <- c("1_2_a", "1_2_b", "1_2_c", "1_2_d")
+Q1_2_rel <- 100/sum(Q1_2_sum)*Q1_2_sum
+q1_2 <- barplot(Q1_2_rel,
+        main = "Wie viel Prozent Ihrer Arbeitszeit beschäftigen Sie sich mit der Biodiversitätsdatenintegration?", 
+        sub = paste("total n", "=", length(ergebnisse$X1_2[!is.na(ergebnisse$X1_2) == T]), sep = " "),
+        names.arg = c("0 bis 25%", "26 bis 50%", "51 bis 75%", "76 bis 100%"),
+        ylim = c(0,max(Q1_2_rel)+5), yaxt='n')
+text(x = q1_2, y = Q1_2_rel, label = paste("n = ", Q1_2_sum, " / ", round(Q1_2_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+
+Q2_1_sum <- as.numeric(table(Q2_1))
+names(Q2_1_sum) <- c("2_1_a", "2_1_b")
+Q2_1_rel <- 100/sum(Q2_1_sum)*Q2_1_sum
+q2_1 <- barplot(Q2_1_rel,
+        main = "Haben Sie bereits von den FAIR-Prinzipien gehört?", 
+        sub = paste("total n", "=", length(ergebnisse$X2_1[!is.na(ergebnisse$X2_1) == T]), sep = " "),
+        names.arg = c("Ja", "Nein"),
+        ylim = c(0,max(Q2_1_rel)+5), yaxt='n')
+text(x = q2_1, y = Q2_1_rel, label = paste("n = ", Q2_1_sum, " / ", round(Q2_1_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+
+Q2_2_sum <- as.numeric(table(Q2_2)) ########################################
+names(Q2_2_sum) <- c("2_2_a", "2_2_b", "2_2_c", "2_2_d")
+Q2_2_rel <- 100/sum(Q2_2_sum)*Q2_2_sum
+q2_2 <- barplot(Q2_2_rel,
+        main = "Haben Sie bereits von den FAIR-Prinzipien gehört?", 
+        sub = paste("total n", "=", length(ergebnisse$X2_2[!is.na(ergebnisse$X2_2) == T]), sep = " "),
+        names.arg = c("2_2_a", "2_2_b", "2_2_c", "2_2_d"),
+        ylim = c(0,max(Q2_1_rel)+5), yaxt='n')
+text(x = q2_2, y = Q2_1_rel, label = paste("n = ", Q2_2_sum, " / ", round(Q2_2_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
 ```
 
