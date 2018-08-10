@@ -99,8 +99,113 @@ Feedback[c(22,43)] <- NA
 xlsx::write.xlsx(Feedback, file = "Feedback.xls")
 
 # Quantitative Antworten
-Q1_1 <- xlsx::read.xlsx(file = "Daten/results.xlsx", sheetIndex = 1, encoding="UTF-8", header = F)
+results <- xlsx::read.xlsx(file = "Daten/results.xlsx", sheetIndex = 1, encoding="UTF-8")
+Q1_1 <- factor(results$Q1_1, levels = c("Datenbereitstellung", 
+                                        "Datenaufbereitung",
+                                        "Datenverschmelzung",
+                                        "Mit keinem 'dieser' Schritte"))
+Q1_2 <- factor(results$Q1_2, levels = c("0 bis 25%", 
+                                        "26 bis 50%",
+                                        "51 bis 75%",
+                                        "76 bis 100%"))
+Q2_1 <- factor(results$Q2_1, levels = c("Ja", 
+                                        "Nein"))
+Q2_4 <- factor(results$Q2_4, levels = c("Ja", 
+                                        "Nein",
+                                        "In Teilen"))
+Q3_1 <- factor(results$Q3_1, levels = c("Ja", 
+                                        "Nein"))
+Q3_2 <- factor(results$Q3_2, levels = c("Light Detection and Ranging (LIDAR)", 
+                                        "Radio Detection and Ranging (RADAR)",
+                                        "Multispektrale Bilder",
+                                        "Hyperspektrale Bilder",
+                                        "Wärmebilder",
+                                        "Luftbilder/ Orthophotos",
+                                        "Andere"))
+Q3_3 <- factor(results$Q3_3, levels = c("Biodiversitätsmonitoring", 
+                                        "Politische Berichterstattung",
+                                        "Forschung",
+                                        "Planung",
+                                        "Beratung",
+                                        "Andere privatwirtschaftliche Zwecke"))
+Q3_5 <- factor(results$Q3_5, levels = c("Deutsche Nationale Biodiversitätsstrategie", 
+                                        "Europäische Biodiversitätsstrategie",
+                                        "Gemeinsame Agrarpolitik der EU (GAP)",
+                                        "Natura 2000",
+                                        "Fauna-Flora-Habitat-Richtlinie (FFH)",
+                                        "Übereinkommen über die biologische Vielfalt (CBD)",
+                                        "Intergovernmental science-policy Platform on Biodiversity and Ecosystem Services (IPBES)",
+                                        "Washingtoner Artenschutzabkommen (CITES",
+                                        "Übereinkommen zur Erhaltung wandernder wild lebender Tierarten (CMS)",
+                                        "Abkommen zur Erhaltung der europäischen Fledermauspopulationen (EUROBATS)",
+                                        "Übereinkommen über Feuchtgebiete (Ramsar)",
+                                        "Group on Earth Observations (GEO)",
+                                        "Andere"))
+Q4_1 <- factor(results$Q4_1, levels = c("Männlich", 
+                                        "Weiblich"))
+Q4_2 <- factor(results$Q4_2, levels = c("25-34 Jahre", 
+                                        "35-44 Jahre", 
+                                        "45-59 Jahre", 
+                                        "60-69 Jahre", 
+                                        "70 Jahre und älter"))
+Q4_3 <- factor(results$Q4_3, levels = c("Sekundarstufe II", 
+                                        "Abitur", 
+                                        "Master", 
+                                        "Diplom", 
+                                        "Promotion", 
+                                        "Habilitation"))
+Q4_4 <- factor(results$Q4_4, levels = c("Professor_in",
+                                        "Post-Doc",
+                                        "Wissenschaftliche_r Angestellte_r ohne Doktortitel",
+                                        "Doktorand_in",
+                                        "Technische_r Angestellte_r",
+                                        "Angestellte_r in Administration und Management",
+                                        "Andere"))
+Q4_5 <- factor(results$Q4_5, levels = c("Akademische Tätigkeit: Forschung",
+                                        "Akademische Tätigkeit: Forschung und Lehre",
+                                        "Regierung oder Behörde",
+                                        "Privatwirtschaft",
+                                        "Verein oder NGO"))
+Q4_6 <- factor(results$Q4_6, levels = c("Lokal/ Regional innerhalb Deutschland",
+                                        "National in Gesamt-Deutschland",
+                                        "Europa",
+                                        "International (über Europa hinaus)"))
 
+Q2_2 <- xlsx::read.xlsx(file = "Daten/results.xlsx", sheetIndex = 2, encoding="UTF-8")
+row.names(Q2_2) <- Q2_2[,1]
+Q2_2 <- t(Q2_2[,-1])
+
+Q2_3 <- xlsx::read.xlsx(file = "Daten/results.xlsx", sheetIndex = 3, encoding="UTF-8")
+row.names(Q2_3) <- Q2_3[,1]
+Q2_3 <- t(Q2_3[,-1])
+
+Q3_4 <- xlsx::read.xlsx(file = "Daten/results.xlsx", sheetIndex = 4, encoding="UTF-8")
+row.names(Q3_4) <- Q3_4[,1]
+Q3_4 <- t(Q3_4[,-1])
 ```
 
+
+# Visualisierung
+
+```{r Barplots, eval=FALSE}
+plot(Q1_1, main = "Mit welchem dieser Schritte der Biodiversitätsdatenintegration beschäftigen Sie sich?")
+plot(Q4_1, main = "Geschlechterverteilung")
+plot(Q4_2, main = "Altersverteilung")
+plot(Q4_3, main = "Höchste Abschlüsse")
+plot(Q4_4, main = "Aktuelle Tätigkeit")
+plot(Q4_5, main = "Kategorie des Arbeitgebers")
+plot(Q4_6, main = "Skala der Anwendung von Biodiversitätsdaten")
+
+Q1_1_rel <- prop.table(table(results$Q1_1[!is.na(results$Q1_1)]))
+barplot(Q1_1_rel*100,
+        main = "Mit welchem dieser Schritte der Biodiversitätsdatenintegration beschäftigen Sie sich?", 
+        sub = paste("n", "=", length(Q1_1[!is.na(Q1_1)]), sep = " "),
+        ylab = "Prozent")
+
+Q1_2_rel <- prop.table(table(results$Q1_2[!is.na(results$Q1_2)]))
+barplot(Q1_2_rel*100,
+        main = "Wie viel Ihrer Arbeitszeit beschäftigen Sie sich mit der Biodiversitätsdatenintegration?", 
+        sub = paste("n", "=", length(Q1_2[!is.na(Q1_2)]), sep = " "),
+        ylab = "Prozent")
+```
 
