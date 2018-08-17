@@ -287,7 +287,7 @@ text(x = q2_4, y = Q2_4_rel, label = paste(round(Q2_4_rel, digits = 0), "%", " \
 
 labls <- paste(names(Q2_4_rel), "\n", round(Q2_4_rel, digits = 0), "%", sep = "")
 pie(Q2_4_rel, labels = labls, col = c("forestgreen", "firebrick", "yellowgreen"),
-    main = "Handeln Sie in Ihrer Forschung oder Arbeit bereits nach dem Prinzip des FAIRen Datenmanagements?")
+    main = "Handeln Sie in Ihrer Forschung oder Arbeit \n bereits nach dem Prinzip des FAIRen Datenmanagements?")
 ```
 
 ```{r Q3_1, eval=FALSE}
@@ -417,10 +417,10 @@ text(x = q3_5, y = Q3_5_rel, label = paste(round(Q3_5_rel, digits = 0), "%", " \
 Q3_7 <- factor(ergebnisse$X3_7, levels = c("3_7_a", "3_7_b"))
 
 Q3_7_sum <- as.numeric(table(Q3_7))
-names(Q3_7_sum) <- c("3_7_a", "3_7_b")
+names(Q3_7_sum) <- c("Ja", "Nein")
 Q3_7_rel <- 100/sum(Q3_7_sum)*Q3_7_sum
 q3_7 <- barplot(Q3_7_rel,
-        main = "Kannten Sie das Konzept der Essentiellen Biodiversitätsvariablen (EBVs) Bereits?", 
+        main = "Kannten Sie das Konzept der Essentiellen Biodiversitätsvariablen (EBVs) bereits?", 
         sub = paste("total n", "=", length(ergebnisse$X3_7[!is.na(ergebnisse$X3_7) == T]), sep = " "),
         names.arg = c("Ja", "Nein"),
         ylim = c(0,max(Q3_7_rel)+5), yaxt='n')
@@ -428,7 +428,7 @@ text(x = q3_7, y = Q3_7_rel, label = paste(round(Q3_7_rel, digits = 0), "%", " \
 
 labls <- paste(names(Q3_7_rel), "\n", round(Q3_7_rel, digits = 0), "%", sep = "")
 pie(Q3_7_rel, labels = labls, col = c("forestgreen", "firebrick"),
-    main = "Nutzen Sie bereits Fernerkundungsdaten in Ihrer Arbeit?")
+    main = "Kannten Sie das Konzept der \n Essentiellen Biodiversitätsvariablen (EBVs) bereits?")
 ```
 
 ```{r Q3_8 (_1 / _2 / _3), eval=FALSE}
