@@ -36,6 +36,10 @@ setwd("U:/Workshops_orga/Biodiv_Datenintegration/Umfrage/R") # Jonas
 # Installing required packages if not installed yet
 if("xlsx" %in% rownames(installed.packages())   == FALSE){
   install.packages("xlsx")}
+if("splus2R" %in% rownames(installed.packages())   == FALSE){
+  install.packages("splus2R")}
+if("RColorBrewer" %in% rownames(installed.packages())   == FALSE){
+  install.packages("RColorBrewer")}
 ```
 
 ```{r set additional functions, eval=FALSE}
@@ -54,9 +58,12 @@ Raw_englisch <- read.csv2(file = "Daten/questionnaire_on_integration_of_biodiver
                           header = F, sep = ";", fileEncoding = "UTF8", 
                           na.strings = "", stringsAsFactors = FALSE)
 
-gesamt <- rbind(Raw_deutsch[-which(Raw_deutsch$V9 == "nefo"),], Raw_englisch[-c(1:3, which(Raw_englisch$V9 == "nefo")),])
-gesamt <- gesamt[,-c(2:5)]
+gesamt <- rbind(Raw_deutsch, Raw_englisch[-c(1:3),])
+names(gesamt) <- gesamt[3,]
+gesamt <- gesamt[-c(1:3),]
 
+
+############### SPALTEN ANPASSEN ###############
 # Qualitative Antworten
 Q1_1 <- gesamt[,c(1:5)]
 names(Q1_1) <- c("Datenbereitstellung", "Datenaufbereitung", "Datenverschmelzung", "anderes", "Info")
@@ -98,6 +105,28 @@ Feedback[c(22,43)] <- NA
 xlsx::write.xlsx(Feedback, file = "Feedback.xls")
 ```
 
+```{r Q1_6, eval=FALSE}
+Q1_6 <- gesamt[,c(1,15:17)]
+
+Q1_6_part <- data.frame(SID = NA, word = NA)
+rows <- c(1:nrow(Q1_6))
+for (r in rows){
+  Q1_6_SID <- Q1_6[r,]
+  Q1_6_part <- rbind(Q1_6_part, c(Q1_6_SID[1,1], Q1_6_SID[1,2]))
+  Q1_6_part <- rbind(Q1_6_part, c(Q1_6_SID[1,1], Q1_6_SID[1,3]))
+  Q1_6_part <- rbind(Q1_6_part, c(Q1_6_SID[1,1], Q1_6_SID[1,4]))
+}
+Q1_6 <- Q1_6_part[-which(is.na(Q1_6_part$word)),]
+rm(Q1_6_part, Q1_6_SID, rows, r)
+Q1_6$word <- splus2R::lowerCase(Q1_6$word)
+xlsx::write.xlsx(Q1_6, file = "Q1_6.xls")
+
+Q1_6 <- xlsx::read.xlsx(file = "Daten/Q1_6_cleaned.xls", sheetIndex = 1, header = TRUE, encoding = "UTF-8")
+Q1_6_tb <- table(Q1_6$word)
+coul <- RColorBrewer::brewer.pal(5, "Set2")
+wordcloud::wordcloud(words = names(Q1_6_tb), freq = as.numeric(Q1_6_tb), min.freq = 1, random.order = FALSE, colors = coul)
+```
+
 
 # Quantitative Fragen
 
@@ -121,8 +150,8 @@ q1_1 <- barplot(Q1_1_rel,
         main = "Mit welchem dieser Schritte der Biodiversitätsdatenintegration beschäftigen Sie sich?", 
         sub = paste("total n", "=", length(rowSums(Q1_1, na.rm=T)!=0), sep = " "),
         names.arg = c("Datenbereitstellung", "Datenaufbereitung", "Datenverschmelzung", "Mit keinem 'dieser' Schritte"),
-        ylim = c(0,max(Q1_1_rel)+5), yaxt='n')
-text(x = q1_1, y = Q1_1_rel, label = paste("n = ", Q1_1_sum, " / ", round(Q1_1_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+        ylim = c(0,max(Q1_1_rel)+5), yaxt='n', col = rgb(69,121,163, max=255))
+text(x = q1_1, y = Q1_1_rel, label = paste(round(Q1_1_rel, digits = 0), "%", " \n ", "n = ", Q1_1_sum, sep = ""), pos = 3, cex = 1, col = "black")
 ```
 
 ```{r Q1_2, eval=FALSE}
@@ -135,13 +164,30 @@ q1_2 <- barplot(Q1_2_rel,
         main = "Wie viel Prozent Ihrer Arbeitszeit beschäftigen Sie sich mit der Biodiversitätsdatenintegration?", 
         sub = paste("total n", "=", length(ergebnisse$X1_2[!is.na(ergebnisse$X1_2) == T]), sep = " "),
         names.arg = c("0 bis 25%", "26 bis 50%", "51 bis 75%", "76 bis 100%"),
-        ylim = c(0,max(Q1_2_rel)+5), yaxt='n')
-text(x = q1_2, y = Q1_2_rel, label = paste("n = ", Q1_2_sum, " / ", round(Q1_2_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+        ylim = c(0,max(Q1_2_rel)+5), yaxt='n', col = rgb(128,179,78, max=255))
+text(x = q1_2, y = Q1_2_rel, label = paste(round(Q1_2_rel, digits = 0), "%", " \n ", "n = ", Q1_2_sum, sep = ""), pos = 3, cex = 1, col = "black")
 ```
 
 ```{r Q2_1, eval=FALSE}
 Q2_1 <- factor(ergebnisse$X2_1, levels = c("2_1_a", "2_1_b"))
 
+Q2_1_sum <- as.numeric(table(Q2_1))
+names(Q2_1_sum) <- c("Ja", "Nein")
+Q2_1_rel <- 100/sum(Q2_1_sum)*Q2_1_sum
+q2_1 <- barplot(Q2_1_rel,
+        main = "Haben Sie bereits von den FAIR-Prinzipien gehört?", 
+        sub = paste("total n", "=", length(ergebnisse$X2_1[!is.na(ergebnisse$X2_1) == T]), sep = " "),
+        names.arg = c("Ja", "Nein"),
+        ylim = c(0,max(Q2_1_rel)+5), yaxt='n')
+text(x = q2_1, y = Q2_1_rel, label = paste(round(Q2_1_rel, digits = 0), "%", " \n ", "n = ", Q2_1_sum, sep = ""), pos = 3, cex = 1, col = "black")
+
+labls <- paste(names(Q2_1_rel), "\n", round(Q2_1_rel, digits = 0), "%", sep = "")
+pie(Q2_1_rel, labels = labls, col = c("forestgreen", "firebrick"),
+    main = "Haben Sie bereits von den FAIR-Prinzipien gehört?")
+````
+
+
+```{r Q2_2, eval=FALSE}
 Q2_2 <- ergebnisse[,c(19:22)]
 Q2_2_table <- data.frame(matrix(NA, ncol = 4, nrow = 4))
 names(Q2_2_table) <- c("2_2_a", "2_2_b", "2_2_c", "2_2_d")
@@ -165,6 +211,24 @@ Q2_2 <- t(Q2_2_table)
 rm(Q2_2_table)
 names(Q2_2) <- c("2_2_1", "2_2_2", "2_2_3", "2_2_4")
 
+Q2_2_sum <- as.numeric(colSums(Q2_2))
+names(Q2_2_sum) <- c("2_2_1", "2_2_2", "2_2_3", "2_2_4")
+Q2_2_rel <- 100/Q2_2_sum*Q2_2
+row.names(Q2_2_rel) <- c("unwichtig", "eher nicht wichtig", "eher wichtig", "sehr wichtig")
+q2_2 <- barplot(Q2_2_rel,
+        main = "Als wie wichtig erachten Sie die vier FAIR-Prinzipien für die Integration von Biodiversitätsdaten?", 
+        sub = paste("mean n", "=", round(mean(Q2_2_sum), digits = 0), sep = " "),
+        names.arg = c("auffindbar", "zugänglich", "harmonisiert", "nachnutzbar"),
+        ylim = c(0,max(Q2_2_rel)+10), yaxt='n',
+        beside = TRUE,
+        legend.text = TRUE,
+        args.legend = list("topright", bty = "n"),
+        col = c("firebrick", "darkorange", "yellowgreen", "forestgreen"))
+text(x = q2_2, y = Q2_2_rel, label = paste(round(Q2_2_rel, digits = 0), "%", " \n ", "n = ", Q2_2, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+
+```{r Q2_3, eval=FALSE}
 Q2_3 <- ergebnisse[,c(23:27)]
 Q2_3_table <- data.frame(matrix(NA, ncol = 4, nrow = 5))
 names(Q2_3_table) <- c("2_3_a", "2_3_b", "2_3_c", "2_3_d")
@@ -192,10 +256,59 @@ Q2_3 <- t(Q2_3_table)
 rm(Q2_3_table)
 names(Q2_3) <- c("2_3_1", "2_3_2", "2_3_3", "2_3_4", "2_3_5")
 
+Q2_3_sum <- as.numeric(colSums(Q2_3))
+names(Q2_3_sum) <- c("2_3_1", "2_3_2", "2_3_3", "2_3_4", "2_3_5")
+Q2_3_rel <- 100/Q2_3_sum*Q2_3
+row.names(Q2_3_rel) <- c("sehr schlecht", "eher schlecht", "eher gut", "sehr gut")
+q2_3 <- barplot(Q2_3_rel,
+        main = "Als wie gut finden Sie die vier FAIR-Prinzipen bei Biodiversitätsdaten in Deutschland bereits umgesetzt?", 
+        sub = paste("mean n", "=", round(mean(Q2_3_sum), digits = 0), sep = " "),
+        names.arg = c("auffindbar", "zugänglich", "harmonisiert", "nachnutzbar", "insgesamt"),
+        ylim = c(0,max(Q2_3_rel)+25), yaxt='n',
+        beside = TRUE, 
+        legend.text = TRUE,
+        args.legend = list("topright", bty = "n"),
+        col = c("firebrick", "darkorange", "yellowgreen", "forestgreen"))
+text(x = q2_3, y = Q2_3_rel, label = paste(round(Q2_3_rel, digits = 0), "%", " \n ", "n = ", Q2_3, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+```{r Q2_4, eval=FALSE}
 Q2_4 <- factor(ergebnisse$X2_4, levels = c("2_4_a", "2_4_b", "2_4_c"))
 
+Q2_4_sum <- as.numeric(table(Q2_4))
+names(Q2_4_sum) <- c("Ja", "Nein", "In Teilen")
+Q2_4_rel <- 100/sum(Q2_4_sum)*Q2_4_sum
+q2_4 <- barplot(Q2_4_rel,
+        main = "Handeln Sie in Ihrer Forschung oder Arbeit bereits nach dem Prinzip des FAIRen Datenmanagements?", 
+        sub = paste("total n", "=", length(ergebnisse$X2_4[!is.na(ergebnisse$X2_4) == T]), sep = " "),
+        names.arg = c("Ja", "Nein", "In Teilen"),
+        ylim = c(0,max(Q2_4_rel)+5), yaxt='n')
+text(x = q2_4, y = Q2_4_rel, label = paste(round(Q2_4_rel, digits = 0), "%", " \n ", "n = ", Q2_4_sum, sep = ""), pos = 3, cex = 1, col = "black")
+
+labls <- paste(names(Q2_4_rel), "\n", round(Q2_4_rel, digits = 0), "%", sep = "")
+pie(Q2_4_rel, labels = labls, col = c("forestgreen", "firebrick", "yellowgreen"),
+    main = "Handeln Sie in Ihrer Forschung oder Arbeit bereits nach dem Prinzip des FAIRen Datenmanagements?")
+```
+
+```{r Q3_1, eval=FALSE}
 Q3_1 <- factor(ergebnisse$X3_1, levels = c("3_1_a", "3_1_b"))
 
+Q3_1_sum <- as.numeric(table(Q3_1))
+names(Q3_1_sum) <- c("Ja", "Nein")
+Q3_1_rel <- 100/sum(Q3_1_sum)*Q3_1_sum
+q3_1 <- barplot(Q3_1_rel,
+        main = "Nutzen Sie bereits Fernerkundungsdaten in Ihrer Arbeit?", 
+        sub = paste("total n", "=", length(ergebnisse$X3_1[!is.na(ergebnisse$X3_1) == T]), sep = " "),
+        names.arg = c("Ja", "Nein"),
+        ylim = c(0,max(Q3_1_rel)+5), yaxt='n')
+text(x = q3_1, y = Q3_1_rel, label = paste(round(Q3_1_rel, digits = 0), "%", " \n ", "n = ", Q3_1_sum, sep = ""), pos = 3, cex = 1, col = "black")
+
+labls <- paste(names(Q3_1_rel), "\n", round(Q3_1_rel, digits = 0), "%", sep = "")
+pie(Q3_1_rel, labels = labls, col = c("forestgreen", "firebrick"),
+    main = "Nutzen Sie bereits Fernerkundungsdaten in Ihrer Arbeit?")
+```
+
+```{r Q3_2, eval=FALSE}
 Q3_2 <- ergebnisse[,c(30:36)]
 Q3_2 <- transform(Q3_2, X3_2_a = as.numeric(X3_2_a), 
                         X3_2_b = as.numeric(X3_2_b), 
@@ -205,6 +318,18 @@ Q3_2 <- transform(Q3_2, X3_2_a = as.numeric(X3_2_a),
                         X3_2_f = as.numeric(X3_2_f),
                         X3_2_g = as.numeric(X3_2_g))
 
+Q3_2_sum <- colSums(Q3_2, na.rm = TRUE)
+Q3_2_rel <- 100/sum(Q3_2_sum)*Q3_2_sum
+q3_2 <- barplot(Q3_2_rel,
+        main = "Welche Art(en) von Fernerkundungsdaten nutzen Sie?", 
+        sub = paste("total n", "=", length(which(rowSums(Q3_2, na.rm=T)!=0)), sep = " "),
+        names.arg = c("LIDAR", "RADAR", "multispektral", "hyperspektral", "Wärmebilder", "Orthophotos", "andere"),
+        ylim = c(0,max(Q3_2_rel)+5), yaxt='n',
+        col = c(RColorBrewer::brewer.pal(7, "Set2")))
+text(x = q3_2, y = Q3_2_rel, label = paste(round(Q3_2_rel, digits = 0), "%", " \n ", "n = ", Q3_2_sum, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+```{r Q3_3, eval=FALSE}
 Q3_3 <- ergebnisse[,c(38:43)]
 Q3_3 <- transform(Q3_3, X3_3_a = as.numeric(X3_3_a), 
                         X3_3_b = as.numeric(X3_3_b), 
@@ -213,13 +338,42 @@ Q3_3 <- transform(Q3_3, X3_3_a = as.numeric(X3_3_a),
                         X3_3_e = as.numeric(X3_3_e),
                         X3_3_f = as.numeric(X3_3_f))
 
-Q3_4 <- xlsx::read.xlsx(file = "Daten/results.xlsx", sheetIndex = 4, encoding="UTF-8") ##########################
+Q3_3_sum <- colSums(Q3_3, na.rm = TRUE)
+Q3_3_rel <- 100/sum(Q3_3_sum)*Q3_3_sum
+q3_3 <- barplot(Q3_3_rel,
+        main = "Für welche(n) Zweck(e) nutzen Sie Fernerkundungsdaten?", 
+        sub = paste("total n", "=", length(which(rowSums(Q3_3, na.rm=T)!=0)), sep = " "),
+        names.arg = c("Biodiv.-Monitoring", "Pol. Berichterstattung", "Forschung", "Planung", "Beratung", "Privatwirtschaftl. Zwecke"),
+        ylim = c(0,max(Q3_3_rel)+5), yaxt='n',
+        col = c(RColorBrewer::brewer.pal(6, "Set2")))
+text(x = q3_3, y = Q3_3_rel, label = paste(round(Q3_3_rel, digits = 0), "%", " \n ", "n = ", Q3_3_sum, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+```{r Q3_4 NEEDS EDIT, eval=FALSE}
+Q3_4 <- xlsx::read.xlsx(file = "Daten/results.xlsx", sheetIndex = 4, encoding="UTF-8")
 row.names(Q3_4) <- Q3_4[,1]
 Q3_4 <- Q3_4[,-1]
 names(Q3_4) <- c("sehr schlecht", "eher schlecht", "eher gut", "sehr gut", "weiß nicht")
 str(Q3_4)
 Q3_4 <- t(Q3_4)
 
+Q3_4_sum <- colSums(t(Q3_4), na.rm = TRUE)
+Q3_4_rel <- 100/Q3_4_sum*t(Q3_4)
+Q3_4_rel <- t(Q3_4_rel)
+Q3_4_rel[,6] <- 0
+q3_4 <- barplot(Q3_4_rel,
+        main = "In Ihrer Anwendung, wie gut funktioniert welche Art von Fernerkundungsdaten?", 
+        sub = paste("total n", "=", length(rowSums(Q3_4, na.rm=T)!=0), sep = " "),
+        names.arg = c("LIDAR", "RADAR", "multispetral", "hyperspektral", "Wärmebilder", "Orthophotos", "andere"),
+        ylim = c(0,max(Q3_4_rel)+20), yaxt='n',
+        beside = TRUE, 
+        legend.text = TRUE,
+        args.legend = list("topright", bty = "n"),
+        col = c("firebrick", "darkorange", "yellowgreen", "forestgreen", "grey"))
+text(x = q3_4, y = Q3_4_rel, label = paste(round(Q3_4_rel, digits = 0), "%", " \n ", "n = ", Q3_4_sum, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+```{r Q3_5, eval=FALSE}
 Q3_5 <- ergebnisse[,c(86:98)]
 Q3_5 <- transform(Q3_5, X3_5_a = as.numeric(X3_5_a), 
                         X3_5_b = as.numeric(X3_5_b), 
@@ -235,8 +389,47 @@ Q3_5 <- transform(Q3_5, X3_5_a = as.numeric(X3_5_a),
                         X3_5_l = as.numeric(X3_5_l),
                         X3_5_m = as.numeric(X3_5_m))
 
+Q3_5_sum <- colSums(Q3_5, na.rm = TRUE)
+Q3_5_rel <- 100/sum(Q3_5_sum)*Q3_5_sum
+q3_5 <- barplot(Q3_5_rel,
+        main = "Zur Berichterstattung für welche(n) Politikprozess(e) nutzen Sie Fernerkundungsdaten?", 
+        sub = paste("total n", "=", length(which(rowSums(Q3_5, na.rm=T)!=0)), sep = " "),
+        names.arg = c("Deutsche Nationale Biodiversitätsstrategie", 
+                                        "Europäische Biodiversitätsstrategie",
+                                        "Gemeinsame Agrarpolitik der EU (GAP)",
+                                        "Natura 2000",
+                                        "Fauna-Flora-Habitat-Richtlinie (FFH)",
+                                        "Übereinkommen über die biologische Vielfalt (CBD)",
+                                        "Intergovernmental science-policy Platform on Biodiversity and Ecosystem Services (IPBES)",
+                                        "Washingtoner Artenschutzabkommen (CITES",
+                                        "Übereinkommen zur Erhaltung wandernder wild lebender Tierarten (CMS)",
+                                        "Abkommen zur Erhaltung der europäischen Fledermauspopulationen (EUROBATS)",
+                                        "Übereinkommen über Feuchtgebiete (Ramsar)",
+                                        "Group on Earth Observations (GEO)",
+                                        "Andere"),
+        ylim = c(0,max(Q3_5_rel)+5), yaxt='n')
+text(x = q3_5, y = Q3_5_rel, label = paste(round(Q3_5_rel, digits = 0), "%", " \n ", "n = ", Q3_5_sum, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+```{r Q3_7, eval=FALSE}
 Q3_7 <- factor(ergebnisse$X3_7, levels = c("3_7_a", "3_7_b"))
 
+Q3_7_sum <- as.numeric(table(Q3_7))
+names(Q3_7_sum) <- c("3_7_a", "3_7_b")
+Q3_7_rel <- 100/sum(Q3_7_sum)*Q3_7_sum
+q3_7 <- barplot(Q3_7_rel,
+        main = "Kannten Sie das Konzept der Essentiellen Biodiversitätsvariablen (EBVs) Bereits?", 
+        sub = paste("total n", "=", length(ergebnisse$X3_7[!is.na(ergebnisse$X3_7) == T]), sep = " "),
+        names.arg = c("Ja", "Nein"),
+        ylim = c(0,max(Q3_7_rel)+5), yaxt='n')
+text(x = q3_7, y = Q3_7_rel, label = paste(round(Q3_7_rel, digits = 0), "%", " \n ", "n = ", Q3_7_sum, sep = ""), pos = 3, cex = 1, col = "black")
+
+labls <- paste(names(Q3_7_rel), "\n", round(Q3_7_rel, digits = 0), "%", sep = "")
+pie(Q3_7_rel, labels = labls, col = c("forestgreen", "firebrick"),
+    main = "Nutzen Sie bereits Fernerkundungsdaten in Ihrer Arbeit?")
+```
+
+```{r Q3_8 (_1 / _2 / _3), eval=FALSE}
 Q3_8 <- ergebnisse[,c(104:107)]
 names(Q3_8) <- c("Klasse", "Frage1", "Frage2", "Frage3")
 Q3_8 <- tidyr::separate(Q3_8, Klasse, c("K1", "K2", "K3", "K4", "K5", "K6"), sep = " - ")
@@ -295,6 +488,21 @@ Q3_8_1 <- t(Q3_8_1_table)
 rm(Q3_8_1_table)
 names(Q3_8_1) <- c("K1", "K2", "K3", "K4", "K5", "K6")
 
+Q3_8_1_sum <- as.numeric(colSums(Q3_8_1))
+names(Q3_8_1_sum) <- c("K1", "K2", "K3", "K4", "K5", "K6")
+Q3_8_1_rel <- 100/Q3_8_1_sum*Q3_8_1
+row.names(Q3_8_1_rel) <- c("Ja", "Nein", "Weiß nicht")
+q3_8_1 <- barplot(Q3_8_1_rel,
+        main = "In welcher(n) Klasse(n) denken Sie sind Fernerkundungsdaten anwendbar?", 
+        sub = paste("mean n", "=", round(mean(Q3_8_1_sum), digits = 0), sep = " "),
+        names.arg = c("Genetik", "Art-Population", "Art-Eigenschaft", "Lebensgemeinschaft", "Ökosystem-Struktur", "Ökosystem-Funktion"),
+        ylim = c(0,max(Q3_8_1_rel)+20), yaxt='n',
+        beside = TRUE, 
+        legend.text = TRUE,
+        args.legend = list("topright", bty = "n"),
+        col = c("forestgreen", "firebrick", "grey"))
+text(x = q3_8_1, y = Q3_8_1_rel, label = paste(round(Q3_8_1_rel, digits = 0), "%", " \n ", "n = ", Q3_8_1, sep = ""), pos = 3, cex = 1, col = "black")
+
 Q3_8_2_table <- data.frame(matrix(NA, ncol = 2, nrow = 6))
 names(Q3_8_2_table) <- c("Ja", "Nein")
 Q3_8_2_table[1,1] <- length(which(Q3_8_2$`Genetische Zusammensetzung` == "Ja"))
@@ -312,6 +520,21 @@ Q3_8_2_table[6,2] <- length(which(Q3_8_2$`Ökosystem-Funktion` == "Nein"))
 Q3_8_2 <- t(Q3_8_2_table)
 rm(Q3_8_2_table)
 names(Q3_8_2) <- c("K1", "K2", "K3", "K4", "K5", "K6")
+
+Q3_8_2_sum <- as.numeric(colSums(Q3_8_2))
+names(Q3_8_2_sum) <- c("K1", "K2", "K3", "K4", "K5", "K6")
+Q3_8_2_rel <- 100/Q3_8_2_sum*Q3_8_2
+row.names(Q3_8_2_rel) <- c("Ja", "Nein")
+q3_8_2 <- barplot(Q3_8_2_rel,
+        main = "In welcher(n) Klasse(n) wenden Sie bereits Fernerkundungsdaten an?", 
+        sub = paste("mean n", "=", round(mean(Q3_8_2_sum), digits = 0), sep = " "),
+        names.arg = c("Genetik", "Art-Population", "Art-Eigenschaft", "Lebensgemeinschaft", "Ökosystem-Struktur", "Ökosystem-Funktion"),
+        ylim = c(0,max(Q3_8_2_rel)+20), yaxt='n',
+        beside = TRUE, 
+        legend.text = TRUE,
+        args.legend = list("topright", bty = "n"),
+        col = c("forestgreen", "firebrick"))
+text(x = q3_8_2, y = Q3_8_2_rel, label = paste(round(Q3_8_2_rel, digits = 0), "%", " \n ", "n = ", Q3_8_2, sep = ""), pos = 3, cex = 1, col = "black")
 
 Q3_8_3_table <- data.frame(matrix(NA, ncol = 3, nrow = 6))
 names(Q3_8_3_table) <- c("Ja", "Nein", "Weiß nicht")
@@ -337,173 +560,6 @@ Q3_8_3 <- t(Q3_8_3_table)
 rm(Q3_8_3_table)
 names(Q3_8_3) <- c("K1", "K2", "K3", "K4", "K5", "K6")
 
-Q4_1 <- factor(ergebnisse$X4_1, levels = c("4_1_a", "4_1_b"))
-
-Q4_2 <- factor(ergebnisse$X4_2, levels = c("4_2_a", "4_2_b", "4_2_c", "4_2_d", "4_2_e", "4_2_f"))
-
-Q4_3 <- factor(ergebnisse$X4_3, levels = c("4_3_a", "4_3_b", "4_3_c", "4_3_d", "4_3_e", "4_3_f", "4_3_g", "4_3_h", "4_3_i", "4_3_j"))
-
-Q4_4 <- factor(ergebnisse$X4_4, levels = c("4_4_a", "4_4_b", "4_4_c", "4_4_d", "4_4_e", "4_4_f", "4_4_g", "4_4_h", "4_4_i"))
-
-Q4_5 <- factor(ergebnisse$X4_5, levels = c("4_5_a", "4_5_b", "4_5_c", "4_5_d", "4_5_e"))
-
-Q4_6 <- ergebnisse[,c(115:118)]
-Q4_6 <- transform(Q4_6, X4_6_a = as.numeric(X4_6_a), 
-                        X4_6_b = as.numeric(X4_6_b), 
-                        X4_6_c = as.numeric(X4_6_c), 
-                        X4_6_d = as.numeric(X4_6_d))
-```
-
-```{r Barplots, eval=FALSE}
-Q2_1_sum <- as.numeric(table(Q2_1))
-names(Q2_1_sum) <- c("2_1_a", "2_1_b")
-Q2_1_rel <- 100/sum(Q2_1_sum)*Q2_1_sum
-q2_1 <- barplot(Q2_1_rel,
-        main = "Haben Sie bereits von den FAIR-Prinzipien gehört?", 
-        sub = paste("total n", "=", length(ergebnisse$X2_1[!is.na(ergebnisse$X2_1) == T]), sep = " "),
-        names.arg = c("Ja", "Nein"),
-        ylim = c(0,max(Q2_1_rel)+5), yaxt='n')
-text(x = q2_1, y = Q2_1_rel, label = paste("n = ", Q2_1_sum, " / ", round(Q2_1_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q2_2_sum <- as.numeric(colSums(Q2_2))
-names(Q2_2_sum) <- c("2_2_1", "2_2_2", "2_2_3", "2_2_4")
-Q2_2_rel <- 100/Q2_2_sum*Q2_2
-row.names(Q2_2_rel) <- c("unwichtig", "eher nicht wichtig", "eher wichtig", "sehr wichtig")
-q2_2 <- barplot(Q2_2_rel,
-        main = "Als wie wichtig erachten Sie die vier FAIR-Prinzipien für die Integration von Biodiversitätsdaten?", 
-        sub = paste("mean n", "=", round(mean(Q2_2_sum), digits = 0), sep = " "),
-        names.arg = c("auffindbar", "zugänglich", "harmonisiert", "nachnutzbar"),
-        ylim = c(0,max(Q2_2_rel)+5), yaxt='n',
-        beside = TRUE,
-        legend.text = TRUE,
-        args.legend = list("topright", bty = "n"))
-text(x = q2_2, y = Q2_2_rel, label = paste("n = ", Q2_2, " / ", round(Q2_2_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q2_3_sum <- as.numeric(colSums(Q2_3))
-names(Q2_3_sum) <- c("2_3_1", "2_3_2", "2_3_3", "2_3_4", "2_3_5")
-Q2_3_rel <- 100/Q2_3_sum*Q2_3
-row.names(Q2_3_rel) <- c("sehr schlecht", "eher schlecht", "eher gut", "sehr gut")
-q2_3 <- barplot(Q2_3_rel,
-        main = "Als wie gut finden Sie die vier FAIR-Prinzipen bei Biodiversitätsdaten in Deutschland bereits umgesetzt?", 
-        sub = paste("mean n", "=", round(mean(Q2_3_sum), digits = 0), sep = " "),
-        names.arg = c("auffindbar", "zugänglich", "harmonisiert", "nachnutzbar", "insgesamt"),
-        ylim = c(0,max(Q2_3_rel)+20), yaxt='n',
-        beside = TRUE, 
-        legend.text = TRUE,
-        args.legend = list("topright", bty = "n"))
-text(x = q2_3, y = Q2_3_rel, label = paste("n = ", Q2_3, " / ", round(Q2_3_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q2_4_sum <- as.numeric(table(Q2_4))
-names(Q2_4_sum) <- c("2_4_a", "2_4_b", "2_4_c")
-Q2_4_rel <- 100/sum(Q2_4_sum)*Q2_4_sum
-q2_4 <- barplot(Q2_4_rel,
-        main = "Handeln Sie in Ihrer Forschung oder Arbeit bereits nach dem Prinzip des FAIRen Datenmanagements?", 
-        sub = paste("total n", "=", length(ergebnisse$X2_4[!is.na(ergebnisse$X2_4) == T]), sep = " "),
-        names.arg = c("Ja", "Nein", "In Teilen"),
-        ylim = c(0,max(Q2_4_rel)+5), yaxt='n')
-text(x = q2_4, y = Q2_4_rel, label = paste("n = ", Q2_4_sum, " / ", round(Q2_4_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q3_1_sum <- as.numeric(table(Q3_1))
-names(Q3_1_sum) <- c("3_1_a", "3_1_b")
-Q3_1_rel <- 100/sum(Q3_1_sum)*Q3_1_sum
-q3_1 <- barplot(Q3_1_rel,
-        main = "Nutzen Sie bereits Fernerkundungsdaten in Ihrer Arbeit?", 
-        sub = paste("total n", "=", length(ergebnisse$X3_1[!is.na(ergebnisse$X3_1) == T]), sep = " "),
-        names.arg = c("Ja", "Nein"),
-        ylim = c(0,max(Q3_1_rel)+5), yaxt='n')
-text(x = q3_1, y = Q3_1_rel, label = paste("n = ", Q3_1_sum, " / ", round(Q3_1_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q3_2_sum <- colSums(Q3_2, na.rm = TRUE)
-Q3_2_rel <- 100/sum(Q3_2_sum)*Q3_2_sum
-q3_2 <- barplot(Q3_2_rel,
-        main = "Welche Art(en) von Fernerkundungsdaten nutzen Sie?", 
-        sub = paste("total n", "=", length(which(rowSums(Q3_2, na.rm=T)!=0)), sep = " "),
-        names.arg = c("LIDAR", "RADAR", "multispektral", "hyperspektral", "Wärmebilder", "Orthophotos", "andere"),
-        ylim = c(0,max(Q3_2_rel)+5), yaxt='n')
-text(x = q3_2, y = Q3_2_rel, label = paste("n = ", Q3_2_sum, " / ", round(Q3_2_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q3_3_sum <- colSums(Q3_3, na.rm = TRUE)
-Q3_3_rel <- 100/sum(Q3_3_sum)*Q3_3_sum
-q3_3 <- barplot(Q3_3_rel,
-        main = "Für welche(n) Zweck(e) nutzen Sie Fernerkundungsdaten?", 
-        sub = paste("total n", "=", length(which(rowSums(Q3_3, na.rm=T)!=0)), sep = " "),
-        names.arg = c("Biodiv.-Monitoring", "Pol. Berichterstattung", "Forschung", "Planung", "Beratung", "Privatwirtschaftl. Zwecke"),
-        ylim = c(0,max(Q3_3_rel)+5), yaxt='n')
-text(x = q3_3, y = Q3_3_rel, label = paste("n = ", Q3_3_sum, " / ", round(Q3_3_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q3_4_sum <- colSums(t(Q3_4), na.rm = TRUE) ################################
-Q3_4_rel <- 100/Q3_4_sum*t(Q3_4)
-Q3_4_rel <- t(Q3_4_rel)
-Q3_4_rel[,6] <- 0
-q3_4 <- barplot(Q3_4_rel,
-        main = "In Ihrer Anwendung, wie gut funktioniert welche Art von Fernerkundungsdaten?", 
-        sub = paste("total n", "=", length(rowSums(Q3_4, na.rm=T)!=0), sep = " "),
-        names.arg = c("LIDAR", "RADAR", "multispetral", "hyperspektral", "Wärmebilder", "Orthophotos", "andere"),
-        ylim = c(0,max(Q3_4_rel)+20), yaxt='n',
-        beside = TRUE, 
-        legend.text = TRUE,
-        args.legend = list("topright", bty = "n"))
-text(x = q3_4, y = Q3_4_rel, label = paste("n = ", Q3_4_sum, " / ", round(Q3_4_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q3_5_sum <- colSums(Q3_5, na.rm = TRUE)
-Q3_5_rel <- 100/sum(Q3_5_sum)*Q3_5_sum
-q3_5 <- barplot(Q3_5_rel,
-        main = "Zur Berichterstattung für welche(n) Politikprozess(e) nutzen Sie Fernerkundungsdaten?", 
-        sub = paste("total n", "=", length(which(rowSums(Q3_5, na.rm=T)!=0)), sep = " "),
-        names.arg = c("Deutsche Nationale Biodiversitätsstrategie", 
-                                        "Europäische Biodiversitätsstrategie",
-                                        "Gemeinsame Agrarpolitik der EU (GAP)",
-                                        "Natura 2000",
-                                        "Fauna-Flora-Habitat-Richtlinie (FFH)",
-                                        "Übereinkommen über die biologische Vielfalt (CBD)",
-                                        "Intergovernmental science-policy Platform on Biodiversity and Ecosystem Services (IPBES)",
-                                        "Washingtoner Artenschutzabkommen (CITES",
-                                        "Übereinkommen zur Erhaltung wandernder wild lebender Tierarten (CMS)",
-                                        "Abkommen zur Erhaltung der europäischen Fledermauspopulationen (EUROBATS)",
-                                        "Übereinkommen über Feuchtgebiete (Ramsar)",
-                                        "Group on Earth Observations (GEO)",
-                                        "Andere"),
-        ylim = c(0,max(Q3_5_rel)+5), yaxt='n')
-text(x = q3_5, y = Q3_5_rel, label = paste("n = ", Q3_5_sum, " / ", round(Q3_5_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q3_7_sum <- as.numeric(table(Q3_7))
-names(Q3_7_sum) <- c("3_7_a", "3_7_b")
-Q3_7_rel <- 100/sum(Q3_7_sum)*Q3_7_sum
-q3_7 <- barplot(Q3_7_rel,
-        main = "Kannten Sie das Konzept der Essentiellen Biodiversitätsvariablen (EBVs) Bereits?", 
-        sub = paste("total n", "=", length(ergebnisse$X3_7[!is.na(ergebnisse$X3_7) == T]), sep = " "),
-        names.arg = c("Ja", "Nein"),
-        ylim = c(0,max(Q3_7_rel)+5), yaxt='n')
-text(x = q3_7, y = Q3_7_rel, label = paste("n = ", Q3_7_sum, " / ", round(Q3_7_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q3_8_1_sum <- as.numeric(colSums(Q3_8_1))
-names(Q3_8_1_sum) <- c("K1", "K2", "K3", "K4", "K5", "K6")
-Q3_8_1_rel <- 100/Q3_8_1_sum*Q3_8_1
-row.names(Q3_8_1_rel) <- c("Ja", "Nein", "Weiß nicht")
-q3_8_1 <- barplot(Q3_8_1_rel,
-        main = "In welcher(n) Klasse(n) denken Sie sind Fernerkundungsdaten anwendbar?", 
-        sub = paste("mean n", "=", round(mean(Q3_8_1_sum), digits = 0), sep = " "),
-        names.arg = c("Genetik", "Art-Population", "Art-Eigenschaft", "Lebensgemeinschaft", "Ökosystem-Struktur", "Ökosystem-Funktion"),
-        ylim = c(0,max(Q3_8_1_rel)+20), yaxt='n',
-        beside = TRUE, 
-        legend.text = TRUE,
-        args.legend = list("topright", bty = "n"))
-text(x = q3_8_1, y = Q3_8_1_rel, label = paste("n = ", Q3_8_1, " / ", round(Q3_8_1_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
-Q3_8_2_sum <- as.numeric(colSums(Q3_8_2))
-names(Q3_8_2_sum) <- c("K1", "K2", "K3", "K4", "K5", "K6")
-Q3_8_2_rel <- 100/Q3_8_2_sum*Q3_8_2
-row.names(Q3_8_2_rel) <- c("Ja", "Nein")
-q3_8_2 <- barplot(Q3_8_2_rel,
-        main = "In welcher(n) Klasse(n) wenden Sie bereits Fernerkundungsdaten an?", 
-        sub = paste("mean n", "=", round(mean(Q3_8_2_sum), digits = 0), sep = " "),
-        names.arg = c("Genetik", "Art-Population", "Art-Eigenschaft", "Lebensgemeinschaft", "Ökosystem-Struktur", "Ökosystem-Funktion"),
-        ylim = c(0,max(Q3_8_2_rel)+20), yaxt='n',
-        beside = TRUE, 
-        legend.text = TRUE,
-        args.legend = list("topright", bty = "n"))
-text(x = q3_8_2, y = Q3_8_2_rel, label = paste("n = ", Q3_8_2, " / ", round(Q3_8_2_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
-
 Q3_8_3_sum <- as.numeric(colSums(Q3_8_3))
 names(Q3_8_3_sum) <- c("K1", "K2", "K3", "K4", "K5", "K6")
 Q3_8_3_rel <- 100/Q3_8_3_sum*Q3_8_3
@@ -515,18 +571,30 @@ q3_8_3 <- barplot(Q3_8_3_rel,
         ylim = c(0,max(Q3_8_3_rel)+20), yaxt='n',
         beside = TRUE, 
         legend.text = TRUE,
-        args.legend = list("topright", bty = "n"))
-text(x = q3_8_3, y = Q3_8_3_rel, label = paste("n = ", Q3_8_3, " / ", round(Q3_8_3_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+        args.legend = list("topright", bty = "n"),
+        col = c("forestgreen", "firebrick", "grey"))
+text(x = q3_8_3, y = Q3_8_3_rel, label = paste(round(Q3_8_3_rel, digits = 0), "%", " \n ", "n = ", Q3_8_3, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+```{r Q4_1, eval=FALSE}
+Q4_1 <- factor(ergebnisse$X4_1, levels = c("4_1_a", "4_1_b"))
 
 Q4_1_sum <- as.numeric(table(Q4_1))
-names(Q3_7_sum) <- c("4_1_a", "4_1_b")
+names(Q4_1_sum) <- c("Männlich", "Weiblich")
 Q4_1_rel <- 100/sum(Q4_1_sum)*Q4_1_sum
 q4_1 <- barplot(Q4_1_rel,
         main = "Geschlecht", 
         sub = paste("total n", "=", length(ergebnisse$X4_1[!is.na(ergebnisse$X4_1) == T]), sep = " "),
         names.arg = c("Männlich", "Weiblich"),
         ylim = c(0,max(Q4_1_rel)+5), yaxt='n')
-text(x = q4_1, y = Q4_1_rel, label = paste("n = ", Q4_1_sum, " / ", round(Q4_1_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+text(x = q4_1, y = Q4_1_rel, label = paste(round(Q4_1_rel, digits = 0), "%", " \n ", "n = ", Q4_1_sum, sep = ""), pos = 3, cex = 1, col = "black")
+
+labls <- paste(names(Q4_1_rel), "\n", round(Q4_1_rel, digits = 0), "%", sep = "")
+pie(Q4_1_rel, labels = labls, col = c(rgb(128,179,87,max=255), rgb(69,121,163,max=255)))
+```
+
+```{r Q4_2, eval=FALSE}
+Q4_2 <- factor(ergebnisse$X4_2, levels = c("4_2_a", "4_2_b", "4_2_c", "4_2_d", "4_2_e", "4_2_f"))
 
 Q4_2_sum <- as.numeric(table(Q4_2))
 names(Q4_2_sum) <- c("4_2_a", "4_2_b", "4_2_c", "4_2_d", "4_2_e", "4_2_f")
@@ -535,18 +603,31 @@ q4_2 <- barplot(Q4_2_rel,
         main = "Alter", 
         sub = paste("total n", "=", length(ergebnisse$X4_2[!is.na(ergebnisse$X4_2) == T]), sep = " "),
         names.arg = c("18-24 Jahre", "25-34 Jahre", "35-44 Jahre", "45-59 Jahre", "60-69 Jahre", "70 Jahre und älter"),
-        ylim = c(0,max(Q4_2_rel)+5), yaxt='n')
-text(x = q4_2, y = Q4_2_rel, label = paste("n = ", Q4_2_sum, " / ", round(Q4_2_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+        ylim = c(0,max(Q4_2_rel)+5), yaxt='n', col = rgb(69,121,163, max=255))
+text(x = q4_2, y = Q4_2_rel, label = paste(round(Q4_2_rel, digits = 0), "%", " \n ", "n = ", Q4_2_sum, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+```{r Q4_3, eval=FALSE}
+Q4_3 <- factor(ergebnisse$X4_3, levels = c("4_3_a", "4_3_b", "4_3_c", "4_3_d", "4_3_e", "4_3_f", "4_3_g", "4_3_h", "4_3_i", "4_3_j"))
 
 Q4_3_sum <- as.numeric(table(Q4_3))
-names(Q4_3_sum) <- c("4_3_a", "4_3_b", "4_3_c", "4_3_d", "4_3_e", "4_3_f", "4_3_g", "4_3_h", "4_3_i", "4_3_j")
+names(Q4_3_sum) <- c("Hauptsch.", "Realsch.", "Abitur", "Bachelor", "Master", "Diplom", "Examen", "Promotion", "Habilitation", "anderer")
 Q4_3_rel <- 100/sum(Q4_3_sum)*Q4_3_sum
 q4_3 <- barplot(Q4_3_rel,
         main = "Höchster Bildungsabschluss", 
         sub = paste("total n", "=", length(ergebnisse$X4_3[!is.na(ergebnisse$X4_3) == T]), sep = " "),
         names.arg = c("Hauptsch.", "Realsch.", "Abitur", "Bachelor", "Master", "Diplom", "Examen", "Promotion", "Habilitation", "anderer"),
         ylim = c(0,max(Q4_3_rel)+5), yaxt='n')
-text(x = q4_3, y = Q4_3_rel, label = paste("n = ", Q4_3_sum, " / ", round(Q4_3_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+text(x = q4_3, y = Q4_3_rel, label = paste(round(Q4_3_rel, digits = 0), "%", " \n ", "n = ", Q4_3_sum, sep = ""), pos = 3, cex = 1, col = "black")
+
+labls <- paste(c(names(Q4_3_rel[c(5,6,8,9)]), "anderer"), "\n", 
+               c(round(Q4_3_rel[c(5,6,8,9)], digits = 0), 100-sum(round(Q4_3_rel[c(5,6,8,9)], digits = 0))), "%", sep = "")
+pie(c(Q4_3_rel[c(5,6,8,9)], (100-sum(Q4_3_rel[c(5,6,8,9)], digits = 0))), labels = labls, 
+    col = c(rgb(128,179,87,max=255), rgb(173,198,70,max=255), rgb(69,121,163,max=255), rgb(86,151,205,max=255), NA))
+```
+
+```{r Q4_4, eval=FALSE}
+Q4_4 <- factor(ergebnisse$X4_4, levels = c("4_4_a", "4_4_b", "4_4_c", "4_4_d", "4_4_e", "4_4_f", "4_4_g", "4_4_h", "4_4_i"))
 
 Q4_4_sum <- as.numeric(table(Q4_4))
 names(Q4_4_sum) <- c("4_4_a", "4_4_b", "4_4_c", "4_4_d", "4_4_e", "4_4_f", "4_4_g", "4_4_h", "4_4_i")
@@ -555,8 +636,12 @@ q4_4 <- barplot(Q4_4_rel,
         main = "Aktuelle Tätigkeit", 
         sub = paste("total n", "=", length(ergebnisse$X4_4[!is.na(ergebnisse$X4_4) == T]), sep = " "),
         names.arg = c("Professor_in", "Post-Doc", "Wiss.Mit.", "Doktorand_in", "Student_in", "Techn. Ang.", "Admin.", "ÖA", "andere"),
-        ylim = c(0,max(Q4_4_rel)+5), yaxt='n')
-text(x = q4_4, y = Q4_4_rel, label = paste("n = ", Q4_4_sum, " / ", round(Q4_4_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+        ylim = c(0,max(Q4_4_rel)+5), yaxt='n', col = rgb(69,121,163, max=255))
+text(x = q4_4, y = Q4_4_rel, label = paste(round(Q4_4_rel, digits = 0), "%", " \n ", "n = ", Q4_4_sum, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+```{r Q4_5, eval=FALSE}
+Q4_5 <- factor(ergebnisse$X4_5, levels = c("4_5_a", "4_5_b", "4_5_c", "4_5_d", "4_5_e"))
 
 Q4_5_sum <- as.numeric(table(Q4_5))
 names(Q4_5_sum) <- c("4_5_a", "4_5_b", "4_5_c", "4_5_d", "4_5_e")
@@ -565,23 +650,34 @@ q4_5 <- barplot(Q4_5_rel,
         main = "Welcher Kategorie ordnen Sie Ihren Arbeitgeber am ehesten zu?", 
         sub = paste("total n", "=", length(ergebnisse$X4_5[!is.na(ergebnisse$X4_5) == T]), sep = " "),
         names.arg = c("Akad. Forschung", "Akad. Forschung/Lehre", "Behörde", "Wirtschaft", "Verein"),
-        ylim = c(0,max(Q4_5_rel)+5), yaxt='n')
-text(x = q4_5, y = Q4_5_rel, label = paste("n = ", Q4_5_sum, " / ", round(Q4_5_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+        ylim = c(0,max(Q4_5_rel)+5), yaxt='n', col = rgb(69,121,163, max=255))
+text(x = q4_5, y = Q4_5_rel, label = paste(round(Q4_5_rel, digits = 0), "%", " \n ", "n = ", Q4_5_sum, sep = ""), pos = 3, cex = 1, col = "black")
+```
+
+```{r Q4_6, eval=FALSE}
+Q4_6 <- ergebnisse[,c(115:118)]
+Q4_6 <- transform(Q4_6, X4_6_a = as.numeric(X4_6_a), 
+                        X4_6_b = as.numeric(X4_6_b), 
+                        X4_6_c = as.numeric(X4_6_c), 
+                        X4_6_d = as.numeric(X4_6_d))
 
 Q4_6_sum <- colSums(Q4_6, na.rm = TRUE)
+names(Q4_6_sum) <- c("Lokal/ regional in Deutschland", "National in Deutschland", "Europa", "International")
 Q4_6_rel <- 100/sum(Q4_6_sum)*Q4_6_sum
 q4_6 <- barplot(Q4_6_rel,
         main = "In welcher Skala findet Ihre Anwendung der Biodiversitätsdaten statt?", 
         sub = paste("total n", "=", length(which(rowSums(Q4_6, na.rm=T)!=0)), sep = " "),
         names.arg = c("Lokal in D.", "National in D.", "Europa", "International"),
         ylim = c(0,max(Q4_6_rel)+5), yaxt='n')
-text(x = q4_6, y = Q4_6_rel, label = paste("n = ", Q4_6_sum, " / ", round(Q4_6_rel, digits = 0), "%", sep = ""), pos = 3, cex = 0.8, col = "black")
+text(x = q4_6, y = Q4_6_rel, label = paste(round(Q4_6_rel, digits = 0), "%", " \n ", "n = ", Q4_6_sum, sep = ""), pos = 3, cex = 1, col = "black")
+
+labls <- paste(names(Q4_6_rel), "\n", round(Q4_6_rel, digits = 0), "%", sep = "")
+pie(Q4_6_rel, labels = labls, col = c(rgb(128,179,87,max=255), rgb(173,198,70,max=255), rgb(69,121,163,max=255), rgb(86,151,205,max=255)))
 ```
 
 
 
-
-```{r xResr, eval=FALSE}
+```{r xRest, eval=FALSE}
 
 # Quantitative Antworten
 results <- xlsx::read.xlsx(file = "Daten/results.xlsx", sheetIndex = 1, encoding="UTF-8")
