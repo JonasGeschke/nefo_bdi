@@ -325,7 +325,8 @@ q3_2 <- barplot(Q3_2_rel,
         sub = paste("total n", "=", length(which(rowSums(Q3_2, na.rm=T)!=0)), sep = " "),
         names.arg = c("LIDAR", "RADAR", "multispektral", "hyperspektral", "Wärmebilder", "Orthophotos", "andere"),
         ylim = c(0,max(Q3_2_rel)+5), yaxt='n',
-        col = c(RColorBrewer::brewer.pal(7, "Set2")))
+        col = rgb(69,121,163,max=255))
+#        col = c(RColorBrewer::brewer.pal(7, "Set2")))
 text(x = q3_2, y = Q3_2_rel, label = paste(round(Q3_2_rel, digits = 0), "%", " \n ", "n = ", Q3_2_sum, sep = ""), pos = 3, cex = 1, col = "black")
 ```
 
@@ -345,7 +346,8 @@ q3_3 <- barplot(Q3_3_rel,
         sub = paste("total n", "=", length(which(rowSums(Q3_3, na.rm=T)!=0)), sep = " "),
         names.arg = c("Biodiv.-Monitoring", "Pol. Berichterstattung", "Forschung", "Planung", "Beratung", "Privatwirtschaftl. Zwecke"),
         ylim = c(0,max(Q3_3_rel)+5), yaxt='n',
-        col = c(RColorBrewer::brewer.pal(6, "Set2")))
+        col = rgb(128,179,78,max=255))
+#        col = c(RColorBrewer::brewer.pal(6, "Set2")))
 text(x = q3_3, y = Q3_3_rel, label = paste(round(Q3_3_rel, digits = 0), "%", " \n ", "n = ", Q3_3_sum, sep = ""), pos = 3, cex = 1, col = "black")
 ```
 
