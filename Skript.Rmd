@@ -148,7 +148,7 @@ Q1_1_sum <- colSums(Q1_1, na.rm = TRUE)
 Q1_1_rel <- 100/sum(Q1_1_sum)*Q1_1_sum
 q1_1 <- barplot(Q1_1_rel,
         #main = "Mit welchem dieser Schritte der Biodiversitätsdatenintegration beschäftigen Sie sich?", 
-        #main = "With which of these steps of biodiversity data integration do you deal?",
+        main = "With which of these steps of biodiversity data integration do you deal?",
         sub = paste("total n", "=", length(rowSums(Q1_1, na.rm=T)!=0), sep = " "),
         #names.arg = c("Datenbereitstellung", "Datenaufbereitung", "Datenverschmelzung", "Mit keinem 'dieser' Schritte"),
         names.arg = c("Making data available", "Data processing", "Data merging", "None of the above"),
@@ -176,7 +176,8 @@ text(x = q1_2, y = Q1_2_rel, label = paste(round(Q1_2_rel, digits = 0), "%", " \
 Q2_1 <- factor(ergebnisse$X2_1, levels = c("2_1_a", "2_1_b"))
 
 Q2_1_sum <- as.numeric(table(Q2_1))
-names(Q2_1_sum) <- c("Ja", "Nein")
+#names(Q2_1_sum) <- c("Ja", "Nein")
+names(Q2_1_sum) <- c("Yes", "No")
 Q2_1_rel <- 100/sum(Q2_1_sum)*Q2_1_sum
 q2_1 <- barplot(Q2_1_rel,
         #main = "Haben Sie bereits von den FAIR-Prinzipien gehört?", 
